@@ -15,7 +15,7 @@ or
 
 db:
 player
-{(game_id), (color), name, players, cards, opencards, hids}
+{(game_id), (color), name, players, playercards, opencards, hids}
 
 shows
 {id, game_id, from, to, card, showed} - генерируем только для to
