@@ -1,0 +1,32 @@
+.b-colorpicker .item {
+  display: inline-block;
+  margin: 0px;
+  padding: 0px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  margin: 1px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.b-colorpicker .item:hover {
+  border: 2px solid rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.9) inset;
+}
+.b-colorpicker .item.active {
+  border: 2px solid rgba(0, 0, 0, 0.9);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.9) inset;
+}
+
+.form-newgame input,
+.form-newgame h2,
+.form-newgame .b-colorpicker,
+.form-newgame .radio {
+  margin-bottom: 20px;
+}
+
+.form-newgame {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}

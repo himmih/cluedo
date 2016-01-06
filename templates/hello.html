@@ -1,0 +1,49 @@
+<!doctype html>
+<title>Классическая CLUEDO</title>
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
+<script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
+<script type="text/javascript">
+          $(document).ready(
+		  function(){
+			  $('.playercolor').click(
+			      function(e) {
+				      $(e.currentTarget).parent().children().removeClass('active');
+				      $(e.currentTarget).addClass('active');
+			      });
+		  }
+	  );
+</script>
+<div class="container">
+   <form class="form-newgame">
+	{% if not players[0] %}
+	<h2>Создание игры</h2>
+	 <h4 class="players-heading">Количество играков:</h4>
+	 <div class="radio">
+	     <label><input name="players" id="players_3" type="radio" value="3">3</label>
+	    <label><input name="players" id="players_4" type="radio" value="4">4</label>
+	    <label><input name="players" id="players_5" type="radio" value="5">5</label>
+	    <label><input name="players" id="players_6" type="radio" value="6">6</label>
+	 </div>
+	{% else %}
+	<h2>Подключение к игре</h2>
+	{% endif %}
+	    <h4 class="colors-heading">Ваш цвет:</h4>
+	    <div class="b-colorpicker">
+		    <ul class="list">
+			<li class="item playercolor" style="background: #ff0000;" value="0"></li>
+			<li class="item playercolor" style="background: #000080;" value="1"></li>
+			<li class="item playercolor" style="background: #008000;" value="2"></li>
+			<li class="item playercolor" style="background: #800080;" value="3"></li>
+			<li class="item playercolor" style="background: #ffe237;" value="4"></li>
+			<li class="item playercolor" style="background: #ffffff;" value="5"></li>
+		    </ul>
+		</div>
+	 <input name="name" id="name" type="text"class=" form-control" placeholder="Ваше имя" required autofocus>
+	{% if not players[0] %}
+	<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>
+	{% else %}
+	<button class="btn btn-lg btn-primary btn-block" type="submit">Подключится</button>
+	{% endif %}
+ </form>
+</div>
