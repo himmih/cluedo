@@ -10,20 +10,21 @@
 			      function(e) {
 				      $(e.currentTarget).parent().children().removeClass('active');
 				      $(e.currentTarget).addClass('active');
+				      $('input.color').val($(e.currentTarget).val());
 			      });
 		  }
 	  );
 </script>
 <div class="container">
-   <form class="form-newgame">
+   <form class="form-newgame" method="POST">
 	{% if not players[0] %}
 	<h2>Создание игры</h2>
 	 <h4 class="players-heading">Количество играков:</h4>
 	 <div class="radio">
-	     <label><input name="players" id="players_3" type="radio" value="3">3</label>
-	    <label><input name="players" id="players_4" type="radio" value="4">4</label>
-	    <label><input name="players" id="players_5" type="radio" value="5">5</label>
-	    <label><input name="players" id="players_6" type="radio" value="6">6</label>
+	     <label><input name="players" id="players_3" type="radio" value="3" required>3</label>
+	    <label><input name="players" id="players_4" type="radio" value="4" required>4</label>
+	    <label><input name="players" id="players_5" type="radio" value="5" required>5</label>
+	    <label><input name="players" id="players_6" type="radio" value="6" required>6</label>
 	 </div>
 	{% else %}
 	<h2>Подключение к игре</h2>
@@ -38,7 +39,8 @@
 			<li class="item playercolor" style="background: #ffe237;" value="4"></li>
 			<li class="item playercolor" style="background: #ffffff;" value="5"></li>
 		    </ul>
-		</div>
+	 <input name="color" id="color" class="color" type="text" style="display: none;" required>
+	    </div>
 	 <input name="name" id="name" type="text"class=" form-control" placeholder="Ваше имя" required autofocus>
 	{% if not players[0] %}
 	<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>

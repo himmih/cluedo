@@ -16,7 +16,7 @@ PASSWORD = 'default'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-cards = range(21)
+#################### DB WORK ########################################
 
 def connect_db():
 	return sqlite3.connect(app.config['DATABASE'])
@@ -46,44 +46,112 @@ def query_db(query, args=(), one=False):
 	cur.close()
 	return (rv[0] if rv else None) if one else rv
 
+def execute_db(query, args=()):
+	get_db().execute(query, args)
+	get_db().commit()
+
+#################### DB WORK END ########################################
+
+#################### DB SHOW ########################################
+@app.route("/games")
+def get_games():
+	out = ""
+	for game in query_db('select * from games'):
+		out += str(game) + '<br>'	
+	return(out)
+
 @app.route("/players")
 def get_players():
-	def generate():
-		for p in query_db('select * from players'):
-			yield ''.join(p) + '<br>'	
-	return Response(generate())
+	out = ""
+	for player in query_db('select * from players'):
+		out += str(player) + '<br>'	
+	return(out)
 
 @app.route("/shows")
 def get_shows():
-	for sh in query_db('select * from shows'):
-		None
+	out = ""
+	for show in query_db('select * from shows'):
+		out += str(show) + '<br>'	
+	return(out)
 
 @app.route("/checks")
 def get_checks():
+	out = ""
 	for ch in query_db('select * from checks'):
-		None
+		out += str(ch) + '<br>'	
+	return(out)
 
-
-@app.route("/")
-def hello():
-	players = query_db('select * from players limit 1')
-	return render_template('hello.html', players=players)
+#################### DB SHOW END ########################################
 
 
 
+#################### UTILS ########################################
+def join_cards(lcards):
+	return repr(lcards)
 
+def split_cards(scards):
+	return eval(scards)
 
+def new_game_exists():
+    game_id = query_db('select id from game where new')
+    if game_id:
+    	return True
+    else:
+    	return False
 
+def create_game(players, my_color, my_name, game):
+    execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
+    [players, join_cards(game[1]),join_cards(game[0])])
+    game_id = query_db("select id from games where new = 1")
+    print str(game_id) 
+    for i in range(players):
+    	execute_db('insert into players(game_id, color, name, playercards, connected) values (?, ?, ?, ?, ?)',\
+    	[game_id[0][0], my_color, my_name, join_cards(game[2+i]), (i == 0)])
+    return {'players':players, 'connected':{'color':my_color, 'name':my_name}, 'opencards':game[1], 'playercards':game[2], 'color':my_color}
+	
 
-def newgame():
+def generate_game(n = 3):
+    who = []
+    for i in range(6):
+    	who.append('a'+ str(i))
+    random.shuffle(who)
+
+    withwhat = []
+    for i in range(6):
+    	withwhat.append('b'+ str(i))
+    random.shuffle(withwhat)
+
+    where = []
+    for i in range(9):
+    	where.append('c'+str(i))
+    random.shuffle(where)
+
+    hiden =[who.pop(0), withwhat.pop(0), where.pop(0)] #hiden cards
+    out = [hiden]
+
+    cards = who + withwhat + where
     random.shuffle(cards)
-    n = int(request.args.get( 'n' , '3'))
-    out = "hiden cards: " + str(cards.__getslice__(0,3)) + " for game with " + str(n) + " players"
+
+    out.append(cards.__getslice__((18/n)*n, (18/n)*n+18%n)) #open cards out[1]
+
     for i in range(n):
-    	out += "<br> player #" + str(i) + " : " + str(cards.__getslice__( 3 + (18/n)*i, 3 + (18/n)*i + 18/n ))
-    out += "<br> open cards: " + str(cards.__getslice__(3+(18/n)*n, 3+(18/n)*n+18%n))
-    
+	out.append(cards.__getslice__( (18/n)*i, (18/n)*i + 18/n )) #player's cards out[2..]
+
     return out
+#################### UTILS END ########################################
+
+@app.route("/", methods=['GET','POST'])
+def hello():
+	if request.method == 'POST' :
+	        game = generate_game(int(request.form['players'])) 	
+		out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game)
+		return render_template('main.html', out=out)
+	else:
+		# left colors
+		if new_game_exists(): #TODO
+			return render_template('hello.html', players=None)
+		else:
+			return render_template('hello.html', players=None)
 
 if __name__ == "__main__":
     app.debug = True

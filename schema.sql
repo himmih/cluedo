@@ -1,12 +1,20 @@
+drop table if exists games;
+create table games (
+ id integer primary key autoincrement,
+ players integer not null,
+ opencards text not null,
+ hides text not null,
+ new integer not null default 1 
+);
+
 drop table if exists players;
 create table players (
- game_id integer primary key autoincrement,
+ id integer primary key autoincrement,
+ game_id integer not null,
  color integer not null,
  name text not null,
- players integer not null,
- playercards integer[] not null,
- opencards integer[],
- hides integer[] not null
+ playercards text,
+ connected integer not null default 0
 );
 
 drop table if exists shows;
