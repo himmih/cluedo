@@ -93,17 +93,22 @@ def split_cards(scards):
 	return eval(scards)
 
 def new_game_exists():
-    game_id = query_db('select id from game where new')
-    if game_id:
-    	return True
-    else:
-    	return False
+	game = query_db("select players from games where new = 1")
+	if game:
+		players = {'players':game[0][0]}
+    		connected = []
+		for user in query_db('select color, name from players where connected = 1'):
+			connected.append({'color':user[0], 'name': user[1]})
+    		players.update({"connected" : connected})	
+	else:
+		players = {}
+	return players
+
 
 def create_game(players, my_color, my_name, game):
     execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
     [players, join_cards(game[1]),join_cards(game[0])])
     game_id = query_db("select id from games where new = 1")
-    print str(game_id) 
     for i in range(players):
     	execute_db('insert into players(game_id, color, name, playercards, connected) values (?, ?, ?, ?, ?)',\
     	[game_id[0][0], my_color, my_name, join_cards(game[2+i]), (i == 0)])
@@ -145,13 +150,13 @@ def hello():
 	if request.method == 'POST' :
 	        game = generate_game(int(request.form['players'])) 	
 		out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game)
-		return render_template('main.html', out=out)
+		# тут лучше возвращать того кто подключится
+		return render_template('main.html', game=out)
 	else:
 		# left colors
-		if new_game_exists(): #TODO
-			return render_template('hello.html', players=None)
-		else:
-			return render_template('hello.html', players=None)
+		out = new_game_exists()
+		# тут лучше возвращать того кто HE подключится
+		return render_template('hello.html', game=out)
 
 if __name__ == "__main__":
     app.debug = True

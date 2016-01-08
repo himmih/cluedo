@@ -17,7 +17,8 @@
 </script>
 <div class="container">
    <form class="form-newgame" method="POST">
-	{% if not players[0] %}
+	{{ game }}
+	{% if not game['players'] %}
 	<h2>Создание игры</h2>
 	 <h4 class="players-heading">Количество играков:</h4>
 	 <div class="radio">
@@ -30,6 +31,9 @@
 	<h2>Подключение к игре</h2>
 	{% endif %}
 	    <h4 class="colors-heading">Ваш цвет:</h4>
+	    {% for p in game['connected'] %}
+	    <div> {{p['name']}} </div>
+	    {% endfor %}
 	    <div class="b-colorpicker">
 		    <ul class="list">
 			<li class="item playercolor" style="background: #ff0000;" value="0"></li>
@@ -42,7 +46,7 @@
 	 <input name="color" id="color" class="color" type="text" style="display: none;" required>
 	    </div>
 	 <input name="name" id="name" type="text"class=" form-control" placeholder="Ваше имя" required autofocus>
-	{% if not players[0] %}
+	{% if not game['players'] %}
 	<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>
 	{% else %}
 	<button class="btn btn-lg btn-primary btn-block" type="submit">Подключится</button>
