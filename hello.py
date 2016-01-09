@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sqlite3
 import random
 from contextlib import closing
@@ -92,28 +93,46 @@ def join_cards(lcards):
 def split_cards(scards):
 	return eval(scards)
 
-def new_game_exists():
-	game = query_db("select players from games where new = 1")
-	if game:
-		players = {'players':game[0][0]}
-    		connected = []
-		for user in query_db('select color, name from players where connected = 1'):
-			connected.append({'color':user[0], 'name': user[1]})
-    		players.update({"connected" : connected})	
-	else:
-		players = {}
-	return players
+def get_game_db():
+	return query_db("select id, players, opencards, hides from games where new = 1")
 
-
-def create_game(players, my_color, my_name, game):
+def create_game(players, my_color, my_name, game_mem):
     execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
-    [players, join_cards(game[1]),join_cards(game[0])])
+    [players, join_cards(game_mem[1]),join_cards(game_mem[0])])
     game_id = query_db("select id from games where new = 1")
     for i in range(players):
     	execute_db('insert into players(game_id, color, name, playercards, connected) values (?, ?, ?, ?, ?)',\
-    	[game_id[0][0], my_color, my_name, join_cards(game[2+i]), (i == 0)])
-    return {'players':players, 'connected':{'color':my_color, 'name':my_name}, 'opencards':game[1], 'playercards':game[2], 'color':my_color}
+    	[game_id[0][0], my_color, my_name, join_cards(game_mem[2+i]), (i == 0)])
+    
+    opencards_ind = game_mem[1]
+    opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
+    return {'players':players, 'connected':{'color':my_color, 'name':my_name},\
+    'opencards':opencards, 'playercards':dict(zip(game_mem[2], map(card_name, game_mem[2]))), 'color':my_color}
+
+def join_game(game_db, my_color, my_name):
+
+    #TODO MUST CHECK COLOR!!!
+    #TODO MUST CHECK NAME!!!
+
+    empty_player = query_db("select id, playercards from players where connected = 0 and game_id = ? limit 1", [game_db[0][0]])
+
+    execute_db('update players set name = ?, color = ?, connected = 1 where id = ?',\
+    [my_name, my_color,empty_player[0][0]])
+
+    connected = get_connected_players(game_db[0][0]);
+    playercards_ind = split_cards(empty_player[0][1])
+    playercards = dict(zip(playercards_ind, map(card_name, playercards_ind)))
+    opencards_ind = split_cards(game_db[0][2])
+    opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
+
+    return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
+    'playercards': playercards, 'color':my_color}
 	
+def get_connected_players(game_id):
+    connected = [] #TODO DUBLE!!!
+    for user in query_db('select color, name from players where connected = 1 and game_id = ?', [game_id]):
+            connected.append({'color':user[0], 'web_color':colors(user[0]), 'name': user[1]})
+    return connected
 
 def generate_game(n = 3):
     who = []
@@ -143,20 +162,77 @@ def generate_game(n = 3):
 	out.append(cards.__getslice__( (18/n)*i, (18/n)*i + 18/n )) #player's cards out[2..]
 
     return out
+def colors(x):
+    return {
+         0: '#008000',
+         1: '#ffdb58',
+         2: '#000080',
+         3: '#800080',
+         4: '#ff2400',
+         5: '#ffffff'
+    }[x]
+def card_name(x):
+    return {
+        'a0':'Мистер Грин'  ,
+        'a1':'Мистер Мастард'  ,
+        'a2':'Леди Пикок'  ,
+        'a3':'Мистер Плам'  ,
+        'a4':'Леди Скарлет'  ,
+        'a5':'Леди Уайт'  ,
+        'b0':'Гаечный ключ'  ,
+        'b1':'Подсвечник'  ,
+        'b2':'Кинжал'  ,
+        'b3':'Револьвер'  ,
+        'b4':'Свинцовая труба'  ,
+        'b5':'Веревка'  ,
+        'c0':'Ванная комната'  ,
+        'c1':'Кабинет'  ,
+        'c2':'Столовая'  ,
+        'c3':'Бильярдная'  ,
+        'c4':'Гараж'  ,
+        'c5':'Спальня'  ,
+        'c6':'Гостинная'  ,
+        'c7':'Кухня'  ,
+        'c8':'Внутренний двор',
+    }[x]
+
+def colors_from_connect(res, x):
+     try:
+             return res+[x['color']]
+     except KeyError:
+             return res
 #################### UTILS END ########################################
 
 @app.route("/", methods=['GET','POST'])
 def hello():
-	if request.method == 'POST' :
-	        game = generate_game(int(request.form['players'])) 	
-		out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game)
-		# тут лучше возвращать того кто подключится
-		return render_template('main.html', game=out)
-	else:
-		# left colors
-		out = new_game_exists()
-		# тут лучше возвращать того кто HE подключится
+	if request.method == 'POST' : #main
+                game_db = get_game_db()
+                if not game_db: # no game, create game
+                    game_mem = generate_game(int(request.form['players'])) 	
+                    out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game_mem)
+                    session ['color'] = out['color'] #fix player id
+                    return render_template('main.html', game=out)
+                else: # game exists, connect to it
+                    out = join_game(game_db, int(request.form['color' ]), request.form['name'])
+                    session ['color'] = int(request.form['color' ]) #fix player id
+                    return render_template('main.html', game=out)
+	else: # hello
+		game_db = get_game_db()
+	        if game_db:
+	        	out = {'players':game_db[0][1]}
+                        opencards_ind = split_cards(game_db[0][2])
+    	        	out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
+                        freecolors = range(6)
+    	        	connected = get_connected_players(game_db[0][0])
+                        freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
+                        out.update({"connected" : connected})	
+                        if (len(connected) < game_db[0][1]):
+                            out.update({"freecolors": dict(zip(freecolors, map(colors,freecolors)))})
+	        else:
+	        	out = {}
+                        out.update({"freecolors": dict(zip(range(6), map(colors, range(6))))})
 		return render_template('hello.html', game=out)
+                        
 
 if __name__ == "__main__":
     app.debug = True

@@ -16,40 +16,55 @@
 	  );
 </script>
 <div class="container">
-   <form class="form-newgame" method="POST">
-	{{ game }}
-	{% if not game['players'] %}
-	<h2>Создание игры</h2>
-	 <h4 class="players-heading">Количество играков:</h4>
-	 <div class="radio">
-	     <label><input name="players" id="players_3" type="radio" value="3" required>3</label>
-	    <label><input name="players" id="players_4" type="radio" value="4" required>4</label>
-	    <label><input name="players" id="players_5" type="radio" value="5" required>5</label>
-	    <label><input name="players" id="players_6" type="radio" value="6" required>6</label>
-	 </div>
-	{% else %}
-	<h2>Подключение к игре</h2>
-	{% endif %}
-	    <h4 class="colors-heading">Ваш цвет:</h4>
-	    {% for p in game['connected'] %}
-	    <div> {{p['name']}} </div>
-	    {% endfor %}
-	    <div class="b-colorpicker">
-		    <ul class="list">
-			<li class="item playercolor" style="background: #ff0000;" value="0"></li>
-			<li class="item playercolor" style="background: #000080;" value="1"></li>
-			<li class="item playercolor" style="background: #008000;" value="2"></li>
-			<li class="item playercolor" style="background: #800080;" value="3"></li>
-			<li class="item playercolor" style="background: #ffe237;" value="4"></li>
-			<li class="item playercolor" style="background: #ffffff;" value="5"></li>
-		    </ul>
-	 <input name="color" id="color" class="color" type="text" style="display: none;" required>
-	    </div>
-	 <input name="name" id="name" type="text"class=" form-control" placeholder="Ваше имя" required autofocus>
-	{% if not game['players'] %}
-	<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>
-	{% else %}
-	<button class="btn btn-lg btn-primary btn-block" type="submit">Подключится</button>
+   <form class="form-newgame form-small" method="POST">
+	{% if not game['freecolors'] %}
+		<h3 class="control-label">Идет игра, подождите завершения!</h3>
+	{% else %} <!-- can connect -->
+
+		{% if not game['players'] %} <!-- no game -->
+		<div class="row borded">
+		  <h3 class="control-label">Создание игры</h3>
+		</div>
+			<h4 class="players-heading control-label">Количество играков:</h4>
+			<div class="row borded">
+				 <div class="radio borded control-label">
+					<div class="col-xs-3">
+					     <label><input name="players" id="players_3" type="radio" value="3" required>3</label>
+					</div>
+					<div class="col-xs-3">
+					    <label><input name="players" id="players_4" type="radio" value="4" required>4</label>
+					</div>
+					<div class="col-xs-3">
+					    <label><input name="players" id="players_5" type="radio" value="5" required>5</label>
+					</div>
+					<div class="col-xs-3">
+					    <label><input name="players" id="players_6" type="radio" value="6" required>6</label>
+					 </div>
+				</div>
+		       </div>
+		{% else %}  <!-- there is a game -->
+		<h3 class="control-label">Подключение к игре</h3>
+		{% endif %}
+		<h4 class="colors-heading control-label">Ваш цвет:</h4>
+		<div class="row borded">
+		    <div class="b-colorpicker control-label">
+			    <ul class="list padding-0">
+				{% for key, value in game['freecolors'].iteritems() %}
+				<li class="item playercolor" style="background: {{value}};" value="{{key}}"></li>
+				{% endfor %}
+			    </ul>
+			<input name="color" id="color" class="color" type="text" style="display: none;" required>
+		    </div>
+		</div>
+		<h4 class="colors-heading control-label">Ваш имя:</h4>
+		<div class="row borded col-xs-6 col-lg-6 col-lg-offset-3">
+		 <input name="name" id="name" type="text"class="form-control" required autofocus>
+		</div>
+		{% if not game['players'] %} <!-- no game -->
+		<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>
+		{% else %}  <!-- there is a game -->
+		<button class="btn btn-lg btn-primary btn-block" type="submit">Подключится</button>
+		{% endif %}
 	{% endif %}
  </form>
 </div>

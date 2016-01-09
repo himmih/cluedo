@@ -1,8 +1,9 @@
 <!doctype html>
 <title>Классическая CLUEDO</title>
-<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='my.js') }}"></script>
 <script type="text/javascript">
           $(document).ready(
 		  function(){
@@ -16,18 +17,41 @@
 	  );
 </script>
 <div class="container">
-   <form class="form-newgame">
-	<h2>Классическая CLUEDO</h2>
-	<h4 class="players-heading">Открытые карты:</h4>
-	<div class="b-opencards">
-	    <ul class="list">
-		<li class="item opencards" style="background: #ff0000;" value="0"></li>
-	    </ul>
+   <form class="form-main form-small" method="POST">
+	<div class="borded">
+	 {% if game['opencards']|length > 0 %}
+	 	<h4 class="opencards-heading control-label">Открытые карты:</h4>
+	 	{% for key, value in game['opencards'].iteritems() %}
+	 	    <div class="col-xs-12">
+	 	    	<h5 control-label> {{value.decode('utf-8')}} </h5>
+	 	    </div>
+	 	{% endfor %}
+	 {% else %}
+	 	<h4 class="opencards-heading control-label">Нет открытых карт</h4>
+	 {% endif %}
+        </div>	
+	<div class="borded">
+		<h4 class="playercards-heading control-label">Ваши карты:</h4>
+		<div class="radio borded">
+		    {% for key, value in game['playercards'].iteritems() %}
+		    <label class="col-xs-12"><input name="card" id="card_{{key}}" type="radio" value="{{key.decode('utf-8')}}" required>{{value.decode('utf-8')}}</label>
+		    {% endfor %}
+		</div>
 	</div>
-	<div class="radio">
-	    <label><input name="players" id="players_3" type="radio" value="3" required>3</label>
-	    <label><input name="players" id="players_4" type="radio" value="4" required>4</label>
+	<h4 class="colors-heading control-label">Игроки:</h4>
+		<div class="row borded">
+		    <div class="b-colorpicker control-label">
+			    <ul class="list padding-0">
+				{% for player in game['connected'] %}
+				<label ><li class="item playercolor" style="background: {{player['web_color']}};" value="{{player['color']}}"></li>{{player['name']}}</label>
+				{% endfor %}
+			    </ul>
+			<input name="color" id="color" class="color" type="text" style="display: none;" required>
+		    </div>
+		</div>
+	<div class="row">
+		<button class="btn btn-lg btn-primary btn-block" type="submit">Показать</button>
+		<button class="btn btn-lg btn-primary btn-block" type="submit">Обвинить</button>
 	</div>
-	<button class="btn btn-lg btn-primary btn-block" type="submit">Показать</button>
    </form>
 </div>
