@@ -99,14 +99,15 @@ def get_game_db():
 def create_game(players, my_color, my_name, game_mem):
     execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
     [players, join_cards(game_mem[1]),join_cards(game_mem[0])])
-    game_id = query_db("select id from games where new = 1")
+    game_db = get_game_db()
     for i in range(players):
     	execute_db('insert into players(game_id, color, name, playercards, connected) values (?, ?, ?, ?, ?)',\
-    	[game_id[0][0], my_color, my_name, join_cards(game_mem[2+i]), (i == 0)])
+    	[game_db[0][0], my_color, my_name, join_cards(game_mem[2+i]), (i == 0)])
     
     opencards_ind = game_mem[1]
     opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
-    return {'players':players, 'connected':{'color':my_color, 'name':my_name},\
+    connected = get_connected_players(game_db);
+    return {'players':players, 'connected':connected,\
     'opencards':opencards, 'playercards':dict(zip(game_mem[2], map(card_name, game_mem[2]))), 'color':my_color}
 
 def join_game(game_db, my_color, my_name):
@@ -119,7 +120,7 @@ def join_game(game_db, my_color, my_name):
     execute_db('update players set name = ?, color = ?, connected = 1 where id = ?',\
     [my_name, my_color,empty_player[0][0]])
 
-    connected = get_connected_players(game_db[0][0]);
+    connected = get_connected_players(game_db);
     playercards_ind = split_cards(empty_player[0][1])
     playercards = dict(zip(playercards_ind, map(card_name, playercards_ind)))
     opencards_ind = split_cards(game_db[0][2])
@@ -128,10 +129,15 @@ def join_game(game_db, my_color, my_name):
     return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
     'playercards': playercards, 'color':my_color}
 	
-def get_connected_players(game_id):
-    connected = [] #TODO DUBLE!!!
-    for user in query_db('select color, name from players where connected = 1 and game_id = ?', [game_id]):
+def get_connected_players(game_db):
+    if not game_db:
+        game_db = get_game_db()
+    connected = []
+    for user in query_db('select color, name from players where connected = 1 and game_id = ?', [game_db[0][0]]):
             connected.append({'color':user[0], 'web_color':colors(user[0]), 'name': user[1]})
+    for i in range(len(connected), game_db[0][1]):
+        connected.append({'color': -1, 'web_color':'#aaaaaa', 'name': u'Ждем ...'})
+    print 'connected : ' + str(connected)
     return connected
 
 def generate_game(n = 3):
@@ -223,7 +229,8 @@ def hello():
                         opencards_ind = split_cards(game_db[0][2])
     	        	out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
                         freecolors = range(6)
-    	        	connected = get_connected_players(game_db[0][0])
+    	        	connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
+                        print "connected : " + str(connected)
                         freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
                         out.update({"connected" : connected})	
                         if (len(connected) < game_db[0][1]):
