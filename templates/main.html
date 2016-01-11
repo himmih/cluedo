@@ -11,10 +11,12 @@
          function getconnected(){
 		$.getJSON($SCRIPT_ROOT + '/getconnected').done(function(json){
 		    $('#players').empty();
+		    var all = false;
 		    $.each(json, function(index, element) {
+		       if (element.color < 0) all = true;
 		       $('#players').append(" <label ><li class='item playercolor' style='background:" + element.web_color + " ;' value='" + element.color + "'></li>" + element.name + "</label>");
 		       });
-		    setTimeout(getconnected, 3000);
+		    if (all) setTimeout(getconnected, 3000);
 		    return false;
 		});
           }; 
