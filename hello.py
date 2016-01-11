@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import sqlite3
-import random
+from types import *
+import random, collections, sqlite3, json
 from contextlib import closing
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
-abort, render_template, flash, Response
+abort, render_template, flash, Response, make_response, jsonify
 
 # configuration
 DATABASE = 'database.db'
@@ -22,11 +22,6 @@ app.config.from_object(__name__)
 def connect_db():
 	return sqlite3.connect(app.config['DATABASE'])
 
-def init_db():
-	with closing(connect_db()) as db:
-		with app.open_resource('schema.sql', mode='r') as f:
-			db.cursor().executescript(f.read())
-			db.commit()
 
 def get_db():
 	db = getattr(g, '_database' , None)
@@ -132,12 +127,13 @@ def join_game(game_db, my_color, my_name):
 def get_connected_players(game_db):
     if not game_db:
         game_db = get_game_db()
+    if not game_db:
+        return []
     connected = []
     for user in query_db('select color, name from players where connected = 1 and game_id = ?', [game_db[0][0]]):
             connected.append({'color':user[0], 'web_color':colors(user[0]), 'name': user[1]})
     for i in range(len(connected), game_db[0][1]):
         connected.append({'color': -1, 'web_color':'#aaaaaa', 'name': u'Ждем ...'})
-    print 'connected : ' + str(connected)
     return connected
 
 def generate_game(n = 3):
@@ -207,7 +203,24 @@ def colors_from_connect(res, x):
              return res+[x['color']]
      except KeyError:
              return res
+def byteify(input):
+    if isinstance(input, dict):
+        return {byteify(key):byteify(value) for key,value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
 #################### UTILS END ########################################
+
+@app.route("/newgame")
+def init_db():
+	with closing(connect_db()) as db:
+		with app.open_resource('schema.sql', mode='r') as f:
+			db.cursor().executescript(f.read())
+			db.commit()
+        return 'ok'
 
 @app.route("/", methods=['GET','POST'])
 def hello():
@@ -230,7 +243,6 @@ def hello():
     	        	out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
                         freecolors = range(6)
     	        	connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
-                        print "connected : " + str(connected)
                         freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
                         out.update({"connected" : connected})	
                         if (len(connected) < game_db[0][1]):
@@ -239,7 +251,16 @@ def hello():
 	        	out = {}
                         out.update({"freecolors": dict(zip(range(6), map(colors, range(6))))})
 		return render_template('hello.html', game=out)
-                        
+
+@app.route("/getconnected")
+def show_connected():
+    out = json.dumps(get_connected_players(None), encoding='utf-8', ensure_ascii=False)
+    resp = Response(response=out,
+                status=200, \
+                            mimetype="application/json")
+    return(resp)
+
+    
 
 if __name__ == "__main__":
     app.debug = True
