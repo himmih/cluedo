@@ -4,7 +4,20 @@
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='my.js') }}"></script>
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
 <script type="text/javascript">
+         function getconnected(){
+		$.getJSON($SCRIPT_ROOT + '/getconnected').done(function(json){
+		    $('#players').empty();
+		    $.each(json, function(index, element) {
+		       $('#players').append(" <label ><li class='item playercolor' style='background:" + element.web_color + " ;' value='" + element.color + "'></li>" + element.name + "</label>");
+		       });
+		    setTimeout(getconnected, 3000);
+		    return false;
+		});
+          }; 
           $(document).ready(
 		  function(){
 			  $('.playercolor').click(
@@ -15,6 +28,7 @@
 			      });
 		  }
 	  );
+          $(document).ready(getconnected);
 </script>
 <div class="container">
    <form class="form-main form-small" method="POST">
@@ -41,11 +55,7 @@
 	<h4 class="colors-heading control-label">Игроки:</h4>
 		<div class="row borded">
 		    <div class="b-colorpicker control-label">
-			    <ul class="list padding-0">
-				{% for player in game['connected'] %}
-				<label ><li class="item playercolor" style="background: {{player['web_color']}};" value="{{player['color']}}"></li>{{player['name']}}</label>
-				{% endfor %}
-			    </ul>
+			    <ul class="list padding-0" id="players"></ul>
 			<input name="color" id="color" class="color" type="text" style="display: none;" required>
 		    </div>
 		</div>
