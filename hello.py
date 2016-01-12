@@ -88,8 +88,11 @@ def join_cards(lcards):
 def split_cards(scards):
 	return eval(scards)
 
-def get_game_db():
-	return query_db("select id, players, opencards, hides from games where new = 1")
+def get_game_db(id=None):
+        if id:
+            return query_db("select id, players, opencards, hides from games where id = ?", [id])
+        else:
+            return query_db("select id, players, opencards, hides from games where new = 1")
 
 def create_game(players, my_color, my_name, game_mem):
     execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
@@ -102,7 +105,7 @@ def create_game(players, my_color, my_name, game_mem):
     opencards_ind = game_mem[1]
     opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
     connected = get_connected_players(game_db);
-    return {'players':players, 'connected':connected,\
+    return {'game_id': game_db[0][0],'players':players, 'connected':connected,\
     'opencards':opencards, 'playercards':dict(zip(game_mem[2], map(card_name, game_mem[2]))), 'color':my_color}
 
 def join_game(game_db, my_color, my_name):
@@ -123,6 +126,20 @@ def join_game(game_db, my_color, my_name):
 
     return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
     'playercards': playercards, 'color':my_color}
+
+def get_main(game_id, user_color):
+
+    game_db = get_game_db(game_id)
+    player = query_db("select id, playercards from players where color = ? and game_id = ?", [user_color, game_db[0][0]])
+
+    connected = get_connected_players(game_db);
+    playercards_ind = split_cards(player[0][1])
+    playercards = dict(zip(playercards_ind, map(card_name, playercards_ind)))
+    opencards_ind = split_cards(game_db[0][2])
+    opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
+
+    return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
+    'playercards': playercards, 'color':user_color}
 	
 def get_connected_players(game_db):
     if not game_db:
@@ -230,27 +247,33 @@ def hello():
                     game_mem = generate_game(int(request.form['players'])) 	
                     out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game_mem)
                     session ['color'] = out['color'] #fix player id
+                    session ['game'] = out['game_id']
                     return render_template('main.html', game=out)
                 else: # game exists, connect to it
                     out = join_game(game_db, int(request.form['color' ]), request.form['name'])
                     session ['color'] = int(request.form['color' ]) #fix player id
+                    session ['game'] = game_db[0][0] 
                     return render_template('main.html', game=out)
 	else: # hello
 		game_db = get_game_db()
-	        if game_db:
-	        	out = {'players':game_db[0][1]}
-                        opencards_ind = split_cards(game_db[0][2])
-    	        	out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
-                        freecolors = range(6)
-    	        	connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
-                        freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
-                        out.update({"connected" : connected})	
-                        if (len(connected) < game_db[0][1]):
-                            out.update({"freecolors": dict(zip(freecolors, map(colors,freecolors)))})
-	        else:
-	        	out = {}
-                        out.update({"freecolors": dict(zip(range(6), map(colors, range(6))))})
-		return render_template('hello.html', game=out)
+                if not game_db or game_db[0][0] != session.get('game', None) or session.get('color', None) == None:
+                    if game_db:
+                            out = {'players':game_db[0][1]}
+                            opencards_ind = split_cards(game_db[0][2])
+                            out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
+                            freecolors = range(6)
+                            connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
+                            freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
+                            out.update({"connected" : connected})	
+                            if (len(connected) < game_db[0][1]):
+                                out.update({"freecolors": dict(zip(freecolors, map(colors,freecolors)))})
+                    else:
+                            out = {}
+                            out.update({"freecolors": dict(zip(range(6), map(colors, range(6))))})
+                    return render_template('hello.html', game=out)
+                else:
+                    out = get_main(session['game'], session['color']) 
+                    return render_template('main.html', game=out)
 
 @app.route("/getconnected")
 def show_connected():
@@ -259,6 +282,29 @@ def show_connected():
                 status=200, \
                             mimetype="application/json")
     return(resp)
+
+@app.route("/show", methods=['GET','POST'])
+def push_show():
+        my_color = session.get('color') #TODO if not redirect to /
+	game_db = get_game_db() #TODO check against session.get('game', None)
+	if request.method == 'POST' : #main
+         #TODO check inputs
+         card = request.form['card']
+         receiver = int(request.form['color'])
+    	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (?, ?, ?, ?, ?)',\
+    	 [game_db[0][0], my_color, receiver, card, 0])
+         return ''
+        else:
+            show = query_db("select id, card, sender from shows where receiver = ? and game_id = ? limit 1", [my_color, game_db[0][0]])
+            if len(show) > 0:
+                execute_db('update shows set showed = ? where id = ?', [1, show[0][0]])
+                out = json.dumps({'card':show[0][1], 'sender':show[0][2]}, encoding='utf-8', ensure_ascii=False)
+                resp = Response(response=out,
+                            status=200, \
+                                        mimetype="application/json")
+                return(resp)
+            
+                
 
     
 

@@ -32,7 +32,7 @@
           $(document).ready(getconnected);
 </script>
 <div class="container center_div">
-   <form class="form-main form-small" method="POST">
+   <form class="form-main form-small" action="/show" method="POST">
 	<div class="borded">
 	 {% if game['opencards']|length > 0 %}
 	 	<h4 class="opencards-heading control-label">Открытые карты:</h4>

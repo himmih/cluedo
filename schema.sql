@@ -24,7 +24,7 @@ create table shows (
  sender integer not null,
  receiver integer not null,
  card integer not null,
- showed boolean not null
+ showed integer not null default 0
 );
 
 drop table if exists checks ;
@@ -34,6 +34,6 @@ create table checks (
  sender integer not null,
  receiver integer not null,
  cards integer[] not null,
- showed boolean not null,
- good boolean not null
+ showed integer not null default 0,
+ good integer not null default 0
 );
