@@ -14,25 +14,24 @@
 		    var all = false;
 		    $.each(json, function(index, element) {
 		       if (element.color < 0) all = true;
-		       $('#players').append(" <label ><li class='item playercolor' style='background:" + element.web_color + " ;' value='" + element.color + "'></li>" + element.name + "</label>");
+		       $('#players').append("<div class='col-xs-"+Math.floor(12/json.length)+" control-label'> <li class='item playercolor' style='background:" + element.web_color + " ;' value='" + element.color + "'></li><label>" + element.name + "</label></div>");
 		       });
 		    if (all) setTimeout(getconnected, 3000);
+		    else{
+			  $('.playercolor').click(
+			      function(e) {
+			      console.log("click: " + $(e.currentTarget));
+				      $('.playercolor').removeClass('active');
+				      $(e.currentTarget).addClass('active');
+				      $('input.color').val($(e.currentTarget).val());
+			  });
+		    }
 		    return false;
 		});
           }; 
-          $(document).ready(
-		  function(){
-			  $('.playercolor').click(
-			      function(e) {
-				      $(e.currentTarget).parent().children().removeClass('active');
-				      $(e.currentTarget).addClass('active');
-				      $('input.color').val($(e.currentTarget).val());
-			      });
-		  }
-	  );
           $(document).ready(getconnected);
 </script>
-<div class="container">
+<div class="container center_div">
    <form class="form-main form-small" method="POST">
 	<div class="borded">
 	 {% if game['opencards']|length > 0 %}
@@ -63,7 +62,7 @@
 		</div>
 	<div class="row">
 		<button class="btn btn-lg btn-primary btn-block" type="submit">Показать</button>
-		<button class="btn btn-lg btn-primary btn-block" type="submit">Обвинить</button>
+		<button class="btn btn-lg btn-danger btn-block" type="submit">Обвинить</button>
 	</div>
    </form>
 </div>
