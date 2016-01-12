@@ -3,6 +3,7 @@
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='my.js') }}"></script>
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
@@ -15,17 +16,33 @@
 		    $.each(json, function(index, element) {
 		       if (element.color < 0) all = true;
 		       $('#players').append("<div class='col-xs-"+Math.floor(12/json.length)+" control-label'> <li class='item playercolor' style='background:" + element.web_color + " ;' value='" + element.color + "'></li><label>" + element.name + "</label></div>");
-		       });
+		    });
 		    if (all) setTimeout(getconnected, 3000);
 		    else{
 			  $('.playercolor').click(
 			      function(e) {
-			      console.log("click: " + $(e.currentTarget));
 				      $('.playercolor').removeClass('active');
 				      $(e.currentTarget).addClass('active');
 				      $('input.color').val($(e.currentTarget).val());
 			  });
+			  getshows();
 		    }
+		    return false;
+		});
+          }; 
+         function getshows(){
+		console.log("getshows ...");
+		$.getJSON($SCRIPT_ROOT + '/show').done(function(json){
+		    if (json.length) {
+			console.log("g0t ..." + json.sender + ", " + json.card);
+			    $.each(json, function(index, element) {
+				        BootstrapDialog.show({
+					    title: 'From: ' + json.sender,
+					    message: 'Card: ' + json.card + '!'
+					});
+			    })
+		    }
+		    setTimeout(getshows, 4000);
 		    return false;
 		});
           }; 

@@ -303,6 +303,8 @@ def push_show():
                             status=200, \
                                         mimetype="application/json")
                 return(resp)
+            else:
+                return ''
             
                 
 
