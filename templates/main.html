@@ -33,14 +33,10 @@
          function getshows(){
 		console.log("getshows ...");
 		$.getJSON($SCRIPT_ROOT + '/show').done(function(json){
-		    if (json.length) {
-			console.log("g0t ..." + json.sender + ", " + json.card);
-			    $.each(json, function(index, element) {
-				        BootstrapDialog.show({
-					    title: 'From: ' + json.sender,
-					    message: 'Card: ' + json.card + '!'
-					});
-			    })
+		    if (Object.keys(json).length) {
+			$('.modal-title').text("От " + json['sender_name']);
+			$('.modal-body').text(json['card_name']);
+			$('#myModal').modal({});
 		    }
 		    setTimeout(getshows, 4000);
 		    return false;
@@ -48,6 +44,22 @@
           }; 
           $(document).ready(getconnected);
 </script>
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+      <div class="modal-body"> </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
 <div class="container center_div">
    <form class="form-main form-small" action="/show" method="POST">
 	<div class="borded">
@@ -66,7 +78,7 @@
 		<h4 class="playercards-heading control-label">Ваши карты:</h4>
 		<div class="radio borded">
 		    {% for key, value in game['playercards'].iteritems() %}
-		    <label class="col-xs-12"><input name="card" id="card_{{key}}" type="radio" value="{{key.decode('utf-8')}}" required>{{value.decode('utf-8')}}</label>
+		    <label class="col-xs-12"><input name="card" id="card_{{key}}" type="radio" value="{{key}}" required>{{value}}</label>
 		    {% endfor %}
 		</div>
 	</div>

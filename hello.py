@@ -192,27 +192,27 @@ def colors(x):
     }[x]
 def card_name(x):
     return {
-        'a0':'Мистер Грин'  ,
-        'a1':'Мистер Мастард'  ,
-        'a2':'Леди Пикок'  ,
-        'a3':'Мистер Плам'  ,
-        'a4':'Леди Скарлет'  ,
-        'a5':'Леди Уайт'  ,
-        'b0':'Гаечный ключ'  ,
-        'b1':'Подсвечник'  ,
-        'b2':'Кинжал'  ,
-        'b3':'Револьвер'  ,
-        'b4':'Свинцовая труба'  ,
-        'b5':'Веревка'  ,
-        'c0':'Ванная комната'  ,
-        'c1':'Кабинет'  ,
-        'c2':'Столовая'  ,
-        'c3':'Бильярдная'  ,
-        'c4':'Гараж'  ,
-        'c5':'Спальня'  ,
-        'c6':'Гостинная'  ,
-        'c7':'Кухня'  ,
-        'c8':'Внутренний двор',
+        'a0':u'Мистер Грин'  ,
+        'a1':u'Мистер Мастард'  ,
+        'a2':u'Леди Пикок'  ,
+        'a3':u'Мистер Плам'  ,
+        'a4':u'Леди Скарлет'  ,
+        'a5':u'Леди Уайт'  ,
+        'b0':u'Гаечный ключ'  ,
+        'b1':u'Подсвечник'  ,
+        'b2':u'Кинжал'  ,
+        'b3':u'Револьвер'  ,
+        'b4':u'Свинцовая труба'  ,
+        'b5':u'Веревка'  ,
+        'c0':u'Ванная комната'  ,
+        'c1':u'Кабинет'  ,
+        'c2':u'Столовая'  ,
+        'c3':u'Бильярдная'  ,
+        'c4':u'Гараж'  ,
+        'c5':u'Спальня'  ,
+        'c6':u'Гостинная'  ,
+        'c7':u'Кухня'  ,
+        'c8':u'Внутренний двор',
     }[x]
 
 def colors_from_connect(res, x):
@@ -246,6 +246,7 @@ def hello():
                 if not game_db: # no game, create game
                     game_mem = generate_game(int(request.form['players'])) 	
                     out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game_mem)
+                    #TODO make session for hours! not for open page!
                     session ['color'] = out['color'] #fix player id
                     session ['game'] = out['game_id']
                     return render_template('main.html', game=out)
@@ -293,21 +294,27 @@ def push_show():
          receiver = int(request.form['color'])
     	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (?, ?, ?, ?, ?)',\
     	 [game_db[0][0], my_color, receiver, card, 0])
-         return ''
+         return redirect('/', code=302)
         else:
-            show = query_db("select id, card, sender from shows where receiver = ? and game_id = ? limit 1", [my_color, game_db[0][0]])
+            show = query_db("select id, card, sender from shows where receiver = ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
             if len(show) > 0:
                 execute_db('update shows set showed = ? where id = ?', [1, show[0][0]])
-                out = json.dumps({'card':show[0][1], 'sender':show[0][2]}, encoding='utf-8', ensure_ascii=False)
+
+                sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [show[0][2], game_db[0][0]])
+
+                out = json.dumps({'card':show[0][1], 'sender':show[0][2],\
+                'sender_name': sender_name[0][0], 'card_name':card_name(show[0][1])}, encoding='utf-8', ensure_ascii=False)
+
                 resp = Response(response=out,
                             status=200, \
                                         mimetype="application/json")
                 return(resp)
             else:
-                return ''
+                resp = Response(response=json.dumps({}),
+                            status=200, \
+                                        mimetype="application/json")
+                return(resp)
             
-                
-
     
 
 if __name__ == "__main__":
