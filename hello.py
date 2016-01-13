@@ -315,7 +315,21 @@ def push_show():
                                         mimetype="application/json")
                 return(resp)
             
+@app.route("/check", methods=['GET','POST'])
+def check():
+        my_color = session.get('color') #TODO if not redirect to /
+	game_db = get_game_db() #TODO check against session.get('game', None)
+	if request.method == 'POST' : #main
+            hides = query_db("select hides from games where id = ?", [game_db[0][0]])
+            if split_cards(hides[0][0]) == (request.form['card_a'], request.form['card_b'], request.form['card_c']):
+                #TODO update game new = 0
+                None
+            #TODO send checks to all
+            return redirect('/', code=302)
+        else:
+            return render_template('check.html', game=my_color)
     
+
 
 if __name__ == "__main__":
     app.debug = True

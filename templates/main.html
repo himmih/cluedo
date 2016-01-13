@@ -10,6 +10,7 @@
 </script>
 <script type="text/javascript">
          function getconnected(){
+	        $(".btn-danger").click(function() { window.location.replace("$SCRIPT_ROOT + '/check'); }
 		$.getJSON($SCRIPT_ROOT + '/getconnected').done(function(json){
 		    $('#players').empty();
 		    var all = false;
@@ -41,7 +42,7 @@
 		    setTimeout(getshows, 4000);
 		    return false;
 		});
-          }; 
+          };
           $(document).ready(getconnected);
 </script>
 <!-- Modal -->

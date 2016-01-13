@@ -1,0 +1,68 @@
+<!doctype html>
+<title>Классическая CLUEDO</title>
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+<script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='my.js') }}"></script>
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
+<script type="text/javascript">
+</script>
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+      <div class="modal-body"> </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal end -->
+<div class="container center_div">
+   <form class="form-check form-small" action="/check" method="POST">
+	<div class="borded">
+		<h4 class="playercards-heading control-label">Обвинение</h4>
+			<h5 class="colors-heading control-label">КТО?</h4>
+		<div class="radio borded">
+			<label class="col-xs-12"><input name="card_a" id="card_a0" type="radio" value="a0" required>Мистер Грин</label>
+			<label class="col-xs-12"><input name="card_a" id="card_a1" type="radio" value="a1" required>Мистер Мастард</label>
+			<label class="col-xs-12"><input name="card_a" id="card_a2" type="radio" value="a2" required>Леди Пикок</label>
+			<label class="col-xs-12"><input name="card_a" id="card_a3" type="radio" value="a3" required>Мистер Плам</label>
+			<label class="col-xs-12"><input name="card_a" id="card_a4" type="radio" value="a4" required>Леди Скарлет</label>
+			<label class="col-xs-12"><input name="card_a" id="card_a5" type="radio" value="a5" required>Леди Уайт</label>
+		</div>
+			<h5 class="colors-heading control-label">ЧЕМ?</h4>
+		<div class="radio borded">
+			<label class="col-xs-12"><input name="card_b" id="card_b0" type="radio" value="b0" required>Гаечный ключ</label>
+			<label class="col-xs-12"><input name="card_b" id="card_b1" type="radio" value="b1" required>Подсвечник</label>
+			<label class="col-xs-12"><input name="card_b" id="card_b2" type="radio" value="b2" required>Кинжал</label>
+			<label class="col-xs-12"><input name="card_b" id="card_b3" type="radio" value="b3" required>Револьвер</label>
+			<label class="col-xs-12"><input name="card_b" id="card_b4" type="radio" value="b4" required>Свинцовая труба</label>
+			<label class="col-xs-12"><input name="card_b" id="card_b5" type="radio" value="b5" required>Веревка</label>
+		</div>
+			<h5 class="colors-heading control-label">ГДЕ?</h4>
+		<div class="radio borded">
+			<label class="col-xs-12"><input name="card_c" id="card_c0" type="radio" value="c0" required>Ванная комната</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c1" type="radio" value="c1" required>Кабинет</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c2" type="radio" value="c2" required>Столовая</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c3" type="radio" value="c3" required>Бильярдная</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c4" type="radio" value="c4" required>Гараж</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c5" type="radio" value="c5" required>Спальня</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c6" type="radio" value="c6" required>Гостинная</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c7" type="radio" value="c7" required>Кухня</label>
+			<label class="col-xs-12"><input name="card_c" id="card_c8" type="radio" value="c8" required>Внутренний двор</label>
+		</div>
+	</div>
+	<div class="row">
+		<button class="btn btn-lg btn-danger btn-block" type="submit">Обвинить</button>
+	</div>
+   </form>
+</div>
