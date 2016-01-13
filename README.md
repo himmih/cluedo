@@ -1,4 +1,10 @@
 # cluedo
-cluedo for skpe playing 
+cluedo webapp for playing with skype. You need board, persons, dice and no cards.
 
-this is the flask project 
+This is the flask (http://flask.pocoo.org) project.
+
+Install
+
+python hello.py
+
+Every persons have to open http://<yourserver:5000
