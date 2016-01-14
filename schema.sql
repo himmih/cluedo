@@ -33,7 +33,7 @@ create table checks (
  game_id integer not null,
  sender integer not null,
  receiver integer not null,
- cards integer[] not null,
+ cards text not null,
  showed integer not null default 0,
  good integer not null default 0
 );

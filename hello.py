@@ -290,6 +290,7 @@ def push_show():
 	game_db = get_game_db() #TODO check against session.get('game', None)
 	if request.method == 'POST' : #main
          #TODO check inputs
+         #TODO show checks!
          card = request.form['card']
          receiver = int(request.form['color'])
     	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (?, ?, ?, ?, ?)',\
@@ -321,10 +322,15 @@ def check():
 	game_db = get_game_db() #TODO check against session.get('game', None)
 	if request.method == 'POST' : #main
             hides = query_db("select hides from games where id = ?", [game_db[0][0]])
-            if split_cards(hides[0][0]) == (request.form['card_a'], request.form['card_b'], request.form['card_c']):
-                #TODO update game new = 0
-                None
-            #TODO send checks to all
+            cards = map(lambda x: x.encode('utf-8'), [request.form['card_a'], request.form['card_b'], request.form['card_c']])
+            print "check ... hides: " + str(split_cards(hides[0][0])) + ", checks cards: " + str(cards)
+            good = 1 if split_cards(hides[0][0]) == cards else 0
+            if (good): execute_db('update games set new = 0 where id = ?', [game_db[0][0]])
+            players = query_db("select color from players where game_id = ?", [game_db[0][0]])
+            print "zip players: " + str(zip(*players)[0])
+            for player_color in zip(*players)[0]:
+                execute_db('insert into checks(game_id, sender, receiver, cards, showed, good) values (?, ?, ?, ?, ?, ?)',\
+                [game_db[0][0], my_color, player_color, join_cards(cards), 0, good])
             return redirect('/', code=302)
         else:
             return render_template('check.html', game=my_color)
