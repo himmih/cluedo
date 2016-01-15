@@ -287,6 +287,9 @@ def show_connected():
 def push_show():
         my_color = session.get('color') #TODO if not redirect to /
 	game_db = get_game_db() #TODO check against session.get('game', None)
+        if not game_db:
+         return redirect('/', code=302)
+            
 	if request.method == 'POST' : #main
          #TODO check inputs
          #TODO show checks!
@@ -304,7 +307,7 @@ def push_show():
                 sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [check[0][2], game_db[0][0]])
 
                 out = json.dumps({'cards':check[0][1], 'good': check[0][3], 'sender':check[0][2],\
-                'sender_name': sender_name[0][0], 'cards_name':map(card_name, zip(*show)[1])}, encoding='utf-8', ensure_ascii=False)
+                'sender_name': sender_name[0][0], 'cards_name':map(card_name, split_cards(check[0][1]))}, encoding='utf-8', ensure_ascii=False)
 
                 if (check[0][3] == 1): execute_db('update games set new = 0 where id = ?', [game_db[0][0]]) #TODO show everyone?
 
@@ -340,7 +343,6 @@ def check():
             print "check ... hides: " + str(split_cards(hides[0][0])) + ", checks cards: " + str(cards)
             good = 1 if split_cards(hides[0][0]) == cards else 0
             players = query_db("select color from players where game_id = ?", [game_db[0][0]])
-            print "zip players: " + str(zip(*players)[0])
             for player_color in zip(*players)[0]:
                 execute_db('insert into checks(game_id, sender, receiver, cards, showed, good) values (?, ?, ?, ?, ?, ?)',\
                 [game_db[0][0], my_color, player_color, join_cards(cards), 0, good])
