@@ -1,10 +1,10 @@
 <!doctype html>
 <title>Классическая CLUEDO</title>
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
-<script type='text/javascript' src="{{ url_for('static', filename='my.js') }}"></script>
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
