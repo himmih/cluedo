@@ -269,8 +269,7 @@ def hello():
                             if (len(connected) < game_db[0][1]):
                                 out.update({"freecolors": dict(zip(freecolors, map(colors,freecolors)))})
                     else:
-                            out = {}
-                            out.update({"freecolors": dict(zip(range(6), map(colors, range(6))))})
+                            out = {"freecolors": dict(zip(range(6), map(colors, range(6))))}
                     return render_template('hello.html', game=out)
                 else:
                     out = get_main(session['game'], session['color']) 
@@ -298,7 +297,22 @@ def push_show():
          return redirect('/', code=302)
         else:
             show = query_db("select id, card, sender from shows where receiver = ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
-            if len(show) > 0:
+            check = query_db("select id, cards, sender, good from checks where receiver = ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
+            if len(check) > 0:
+                execute_db('update checks set showed = ? where id = ?', [1, check[0][0]])
+
+                sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [check[0][2], game_db[0][0]])
+
+                out = json.dumps({'cards':check[0][1], 'good': check[0][3], 'sender':check[0][2],\
+                'sender_name': sender_name[0][0], 'cards_name':map(card_name, zip(*show)[1])}, encoding='utf-8', ensure_ascii=False)
+
+                if (check[0][3] == 1): execute_db('update games set new = 0 where id = ?', [game_db[0][0]]) #TODO show everyone?
+
+                resp = Response(response=out,
+                            status=200, \
+                                        mimetype="application/json")
+                return(resp)
+            elif len(show) > 0:
                 execute_db('update shows set showed = ? where id = ?', [1, show[0][0]])
 
                 sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [show[0][2], game_db[0][0]])
@@ -325,7 +339,6 @@ def check():
             cards = map(lambda x: x.encode('utf-8'), [request.form['card_a'], request.form['card_b'], request.form['card_c']])
             print "check ... hides: " + str(split_cards(hides[0][0])) + ", checks cards: " + str(cards)
             good = 1 if split_cards(hides[0][0]) == cards else 0
-            if (good): execute_db('update games set new = 0 where id = ?', [game_db[0][0]])
             players = query_db("select color from players where game_id = ?", [game_db[0][0]])
             print "zip players: " + str(zip(*players)[0])
             for player_color in zip(*players)[0]:

@@ -32,12 +32,20 @@
 		});
           }; 
          function getshows(){
-		console.log("getshows ...");
 		$.getJSON($SCRIPT_ROOT + '/show').done(function(json){
 		    if (Object.keys(json).length) {
-			$('.modal-title').text("От " + json['sender_name']);
-			$('.modal-body').text(json['card_name']);
-			$('#myModal').modal({});
+			if (json['good'] != undefined)){ //if check!
+				if (json['good'] == 1)
+					$('.modal-title').text("Верное обвинение от " + json['sender_name']);
+				else
+					$('.modal-title').text("Не верное обвинение от " + json['sender_name']);
+				$('.modal-body').text(json['cards_name'].join(", "));
+				$('#myModal').modal({});
+		        }else{ //if show
+				$('.modal-title').text("От " + json['sender_name']);
+				$('.modal-body').text(json['card_name']);
+				$('#myModal').modal({});
+			}
 		    }
 		    setTimeout(getshows, 4000);
 		    return false;
