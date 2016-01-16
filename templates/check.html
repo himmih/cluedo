@@ -1,15 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Классическая CLUEDO</title>
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+   <!-- Bootstrap -->
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"> 
-<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 <script type="text/javascript">
 </script>
+  </head>
+  <body style="font-size:14px">
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
   <div class="modal-dialog modal-sm">
@@ -28,9 +43,13 @@
 <!-- Modal end -->
 <div class="container center_div">
    <form class="form-check form-small" action="/check" method="POST">
-	<div class="borded">
-		<h4 class="playercards-heading control-label">Обвинение</h4>
-			<h5 class="colors-heading control-label">КТО?</h4>
+<div class="row">
+	<h4 class="playercards-heading control-label">Обвинение</h4>
+</div>
+<div class="row">
+		<h5 class="colors-heading control-label">КТО?</h5>
+</div>
+<div class="row">
 		<div class="radio borded">
 			<label class="col-xs-12"><input name="card_a" id="card_a0" type="radio" value="a0" required>Мистер Грин</label>
 			<label class="col-xs-12"><input name="card_a" id="card_a1" type="radio" value="a1" required>Мистер Мастард</label>
@@ -39,7 +58,11 @@
 			<label class="col-xs-12"><input name="card_a" id="card_a4" type="radio" value="a4" required>Леди Скарлет</label>
 			<label class="col-xs-12"><input name="card_a" id="card_a5" type="radio" value="a5" required>Леди Уайт</label>
 		</div>
-			<h5 class="colors-heading control-label">ЧЕМ?</h4>
+</div>
+<div class="row">
+		<h5 class="colors-heading control-label">ЧЕМ?</h5>
+</div>
+<div class="row">
 		<div class="radio borded">
 			<label class="col-xs-12"><input name="card_b" id="card_b0" type="radio" value="b0" required>Гаечный ключ</label>
 			<label class="col-xs-12"><input name="card_b" id="card_b1" type="radio" value="b1" required>Подсвечник</label>
@@ -48,7 +71,11 @@
 			<label class="col-xs-12"><input name="card_b" id="card_b4" type="radio" value="b4" required>Свинцовая труба</label>
 			<label class="col-xs-12"><input name="card_b" id="card_b5" type="radio" value="b5" required>Веревка</label>
 		</div>
-			<h5 class="colors-heading control-label">ГДЕ?</h4>
+</div>
+<div class="row">
+		<h5 class="colors-heading control-label">ГДЕ?</h5>
+</div>
+<div class="row borded">
 		<div class="radio borded">
 			<label class="col-xs-12"><input name="card_c" id="card_c0" type="radio" value="c0" required>Ванная комната</label>
 			<label class="col-xs-12"><input name="card_c" id="card_c1" type="radio" value="c1" required>Кабинет</label>
@@ -60,9 +87,11 @@
 			<label class="col-xs-12"><input name="card_c" id="card_c7" type="radio" value="c7" required>Кухня</label>
 			<label class="col-xs-12"><input name="card_c" id="card_c8" type="radio" value="c8" required>Внутренний двор</label>
 		</div>
-	</div>
-	<div class="row">
-		<button class="btn btn-lg btn-danger btn-block" type="submit">Обвинить</button>
-	</div>
-   </form>
 </div>
+<div class="row">
+		<button class="btn btn-lg btn-danger btn-block" type="submit">Обвинить</button>
+</div>
+   </form>
+  </div>
+  </body>
+</html>
