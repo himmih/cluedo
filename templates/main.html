@@ -25,12 +25,6 @@
 <script type="text/javascript">
          function getconnected(){
 	        $(".btn-danger").click(function() { window.location.replace($SCRIPT_ROOT + '/check'); });
-		$('.form-main').submit(function() { 
-			var c = confirm("Отправить " 
-				+ $('input[name=card]:checked', '.form-main').parent().text() +" для " 
-				+ $('.playercolor.active').next().text()+ "  ?"); 
-			return c; 
-		});
 		$.getJSON($SCRIPT_ROOT + '/getconnected').done(function(json){
 		    $('#players').empty();
 		    var all = false;
@@ -40,6 +34,12 @@
 		    });
 		    if (all) setTimeout(getconnected, 3000);
 		    else{
+			  $('.form-main').submit(function() { 
+			  	var c = confirm("Отправить " 
+			  		+ $('input[name=card]:checked', '.form-main').parent().text() +" для " 
+			  		+ $('.playercolor.active').next().text()+ "  ?"); 
+			  	return c; 
+			  });
 			  $('.playercolor').click(
 			      function(e) {
 				      $('.playercolor').removeClass('active');
@@ -98,7 +98,7 @@
 	 	<h4 class="opencards-heading control-label">Открытые карты:</h4>
 	 	{% for key, value in game['opencards'].iteritems() %}
 	 	    <div class="col-xs-12">
-	 	    	<h5 control-label> {{value.decode('utf-8')}} </h5>
+	 	    	<h5 control-label> {{value}} </h5>
 	 	    </div>
 	 	{% endfor %}
 	 {% else %}
