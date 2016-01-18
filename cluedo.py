@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from types import *
-import random, collections, sqlite3, json
+import random, collections, json, psycopg2, psycopg2.extensions
 from contextlib import closing
-import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, \
 abort, render_template, flash, Response, make_response, jsonify
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
 # configuration
-DATABASE = 'database.db'
+#DATABASE = 'database.db'
+DATABASE = 'dbname=cluedo user=mih password=himmih1234'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -20,7 +22,8 @@ app.config.from_object(__name__)
 #################### DB WORK ########################################
 
 def connect_db():
-	return sqlite3.connect(app.config['DATABASE'])
+	#return sqlite3.connect(app.config['DATABASE'])
+        return psycopg2.connect(app.config['DATABASE'])
 
 
 def get_db():
@@ -37,40 +40,47 @@ def close_connection(exception):
 		db.close()
 
 def query_db(query, args=(), one=False):
-	cur = get_db().execute(query, args)
-	rv = cur.fetchall()
-	cur.close()
+	cur = get_db().cursor()
+        try:
+            cur.execute(query, args)
+            rv = cur.fetchall()
+        finally:
+	    cur.close()
 	return (rv[0] if rv else None) if one else rv
 
-def execute_db(query, args=()):
-	get_db().execute(query, args)
-	get_db().commit()
+def execute_db(query, args=(), no_commit=False):
+	cur = get_db().cursor()
+        try:
+            cur.execute(query, args)
+            if not no_commit: get_db().commit()
+        finally:
+            cur.close()
 
 #################### DB WORK END ########################################
 
 #################### DB SHOW ########################################
-@app.route("/games")
+@app.route("/_games")
 def get_games():
 	out = ""
 	for game in query_db('select * from games'):
 		out += str(game) + '<br>'	
 	return(out)
 
-@app.route("/players")
+@app.route("/_players")
 def get_players():
 	out = ""
 	for player in query_db('select * from players'):
 		out += str(player) + '<br>'	
 	return(out)
 
-@app.route("/shows")
+@app.route("/_shows")
 def get_shows():
 	out = ""
 	for show in query_db('select * from shows'):
 		out += str(show) + '<br>'	
 	return(out)
 
-@app.route("/checks")
+@app.route("/_checks")
 def get_checks():
 	out = ""
 	for ch in query_db('select * from checks'):
@@ -88,19 +98,19 @@ def join_cards(lcards):
 def split_cards(scards):
 	return eval(scards)
 
-def get_game_db(id=None):
+def get_game_db(id=None): #TODO remove invoke without id
         if id:
-            return query_db("select id, players, opencards, hides from games where id = ?", [id])
+            return query_db("select id, players, opencards, hides from games where id = %s", [id])
         else:
             return query_db("select id, players, opencards, hides from games where new = 1")
 
 def create_game(players, my_color, my_name, game_mem):
-    execute_db('insert into games(players, opencards, hides) values (?, ?, ?)',\
+    execute_db('insert into games(players, opencards, hides) values (%s, %s, %s)',\
     [players, join_cards(game_mem[1]),join_cards(game_mem[0])])
     game_db = get_game_db()
     for i in range(players):
-    	execute_db('insert into players(game_id, color, name, playercards, connected) values (?, ?, ?, ?, ?)',\
-    	[game_db[0][0], my_color, my_name, join_cards(game_mem[2+i]), (i == 0)])
+    	execute_db('insert into players(game_id, color, name, playercards, connected) values (%s, %s, %s, %s, %s)',\
+    	[game_db[0][0], my_color, my_name, join_cards(game_mem[2+i]), 1 if (i == 0) else 0])
     
     opencards_ind = game_mem[1]
     opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
@@ -113,9 +123,9 @@ def join_game(game_db, my_color, my_name):
     #TODO MUST CHECK COLOR!!!
     #TODO MUST CHECK NAME!!!
 
-    empty_player = query_db("select id, playercards from players where connected = 0 and game_id = ? limit 1", [game_db[0][0]])
+    empty_player = query_db("select id, playercards from players where connected = 0 and game_id = %s limit 1", [game_db[0][0]])
 
-    execute_db('update players set name = ?, color = ?, connected = 1 where id = ?',\
+    execute_db('update players set name = %s, color = %s, connected = 1 where id = %s',\
     [my_name, my_color,empty_player[0][0]])
 
     connected = get_connected_players(game_db);
@@ -130,7 +140,7 @@ def join_game(game_db, my_color, my_name):
 def get_main(game_id, user_color):
 
     game_db = get_game_db(game_id)
-    player = query_db("select id, playercards from players where color = ? and game_id = ?", [user_color, game_db[0][0]])
+    player = query_db("select id, playercards from players where color = %s and game_id = %s", [user_color, game_db[0][0]])
 
     connected = get_connected_players(game_db);
     playercards_ind = split_cards(player[0][1])
@@ -142,12 +152,13 @@ def get_main(game_id, user_color):
     'playercards': playercards, 'color':user_color}
 	
 def get_connected_players(game_db):
+    #TODO get only by id!
     if not game_db:
         game_db = get_game_db()
     if not game_db:
         return []
     connected = []
-    for user in query_db('select color, name from players where connected = 1 and game_id = ?', [game_db[0][0]]):
+    for user in query_db('select color, name from players where connected = 1 and game_id = %s', [game_db[0][0]]):
             connected.append({'color':user[0], 'web_color':colors(user[0]), 'name': user[1]})
     for i in range(len(connected), game_db[0][1]):
         connected.append({'color': -1, 'web_color':'#aaaaaa', 'name': u'Ждем ...'})
@@ -241,8 +252,12 @@ def byteify(input):
 def init_db():
 	with closing(connect_db()) as db:
 		with app.open_resource('schema.sql', mode='r') as f:
-			db.cursor().executescript(f.read())
-			db.commit()
+			cur = db.cursor()
+                        try:
+                            cur.execute(f.read())
+                            db.commit()
+                        finally:
+                            cur.close()
         return 'ok'
 
 @app.route("/", methods=['GET','POST'])
@@ -301,32 +316,32 @@ def push_show():
          #TODO show checks!
          card = request.form['card']
          receiver = int(request.form['color'])
-    	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (?, ?, ?, ?, ?)',\
+    	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (%s, %s, %s, %s, %s)',\
     	 [game_db[0][0], my_color, receiver, card, 0])
          return redirect('/', code=302)
         else:
-            show = query_db("select id, card, sender from shows where receiver = ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
-            check = query_db("select id, cards, sender, good from checks where receiver = ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
+            show = query_db("select id, card, sender from shows where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
+            check = query_db("select id, cards, sender, good from checks where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
             if len(check) > 0:
 
-                sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [check[0][2], game_db[0][0]])
+                sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [check[0][2], game_db[0][0]])
 
                 out = json.dumps({'cards':check[0][1], 'good': check[0][3], 'sender':check[0][2],\
                 'sender_name': sender_name[0][0], 'cards_name':map(card_name, split_cards(check[0][1]))}, encoding='utf-8', ensure_ascii=False)
 
                 if (check[0][3] == 1): 
-                    nobody_else = query_db("select id from checks where receiver != ? and game_id = ? and showed = 0 limit 1", [my_color, game_db[0][0]])
-                    if len(nobody_else) < 1: execute_db('update games set new = 0 where id = ?', [game_db[0][0]])
-                execute_db('update checks set showed = ? where id = ?', [1, check[0][0]])
+                    nobody_else = query_db("select id from checks where receiver != %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
+                    if len(nobody_else) < 1: execute_db('update games set new = 0 where id = %s', [game_db[0][0]])
+                execute_db('update checks set showed = %s where id = %s', [1, check[0][0]])
 
                 resp = Response(response=out,
                             status=200, \
                                         mimetype="application/json")
                 return(resp)
             elif len(show) > 0:
-                execute_db('update shows set showed = ? where id = ?', [1, show[0][0]])
+                execute_db('update shows set showed = %s where id = %s', [1, show[0][0]])
 
-                sender_name = query_db("select name from players where color = ? and game_id = ? limit 1", [show[0][2], game_db[0][0]])
+                sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [show[0][2], game_db[0][0]])
 
                 out = json.dumps({'card':show[0][1], 'sender':show[0][2],\
                 'sender_name': sender_name[0][0], 'card_name':card_name(show[0][1])}, encoding='utf-8', ensure_ascii=False)
@@ -346,13 +361,13 @@ def check():
         my_color = session.get('color') #TODO if not redirect to /
 	game_db = get_game_db() #TODO check against session.get('game', None)
 	if request.method == 'POST' : #main
-            hides = query_db("select hides from games where id = ?", [game_db[0][0]])
+            hides = query_db("select hides from games where id = %s", [game_db[0][0]])
+            print str(hides)
             cards = map(lambda x: x.encode('utf-8'), [request.form['card_a'], request.form['card_b'], request.form['card_c']])
-            print "check ... hides: " + str(split_cards(hides[0][0])) + ", checks cards: " + str(cards)
             good = 1 if split_cards(hides[0][0]) == cards else 0
-            players = query_db("select color from players where game_id = ?", [game_db[0][0]])
+            players = query_db("select color from players where game_id = %s", [game_db[0][0]])
             for player_color in zip(*players)[0]:
-                execute_db('insert into checks(game_id, sender, receiver, cards, showed, good) values (?, ?, ?, ?, ?, ?)',\
+                execute_db('insert into checks(game_id, sender, receiver, cards, showed, good) values (%s, %s, %s, %s, %s, %s)',\
                 [game_db[0][0], my_color, player_color, join_cards(cards), 0, good])
             return redirect('/', code=302)
         else:
@@ -362,4 +377,4 @@ def check():
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(host='176.58.109.138', port=4242)
+    app.run() #host='176.58.109.138', port=4242)

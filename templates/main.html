@@ -42,7 +42,7 @@
 				else if ($('.playercolor.active').next().text() == "")
 					bootbox.alert("Выберите Игрока, которому хотите показать карту!");
 				else 
-					bootbox.confirm("Отправить " + $('input[name=card]:checked', '.form-main').parent().text() +" для " + $('.playercolor.active').next().text()+ "  ?", function(result) {
+					bootbox.confirm("Отправить <b>" + $('input[name=card]:checked', '.form-main').parent().text() +"</b> для <b>" + $('.playercolor.active').next().text()+ "</b>  ?", function(result) {
 					    if (result) $('.form-main').submit();
 					});
 			   });
@@ -63,11 +63,11 @@
 		    if (Object.keys(json).length) {
 			if (json.good !== undefined){ //if check!
 				if (json.good == 1)
-					bootbox.dialog({message: json.cards_name.join(", "), title: "Верное обвинение от " + json.sender_name});
+					bootbox.dialog({message: "<b>" + json.cards_name.join(", ") + "</b>", title: "Верное обвинение от <b>" + json.sender_name + "</b>", buttons: {success: { label: "Ура!!! " + json.sender_name ,  className: "btn-success"}}});
 				else
-					bootbox.dialog({message: json.cards_name.join(", "), title: "Нeверное обвинение от " + json.sender_name});
+					bootbox.dialog({message: "<b>" + json.cards_name.join(", ") + "</b>" , title: "Неверное обвинение от <b>" + json.sender_name + "</b>", buttons: {success: { label: "Эх, " + json.sender_name ,  className: "btn-danger"}}});
 		        }else{ //if show
-				bootbox.dialog({message: json.card_name, title: "От " + json.sender_name});
+				bootbox.dialog({message: "<b>" + json.card_name + "</b>", title: json.sender_name});
 			}
 		    }
 		    setTimeout(getshows, 4000);

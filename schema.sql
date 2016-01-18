@@ -1,6 +1,9 @@
+--CREATE EXTENSION "uuid-ossp";
+
 drop table if exists games;
 create table games (
- id integer primary key autoincrement,
+ -- id serial primary key,
+ id uuid primary key DEFAULT uuid_generate_v4(),
  players integer not null,
  opencards text not null,
  hides text not null,
@@ -9,8 +12,8 @@ create table games (
 
 drop table if exists players;
 create table players (
- id integer primary key autoincrement,
- game_id integer not null,
+ id uuid primary key  NOT NULL DEFAULT uuid_generate_v4(),
+ game_id uuid REFERENCES games,
  color integer not null,
  name text not null,
  playercards text,
@@ -19,18 +22,18 @@ create table players (
 
 drop table if exists shows;
 create table shows (
- id integer primary key autoincrement,
- game_id integer not null,
+ id uuid primary key NOT NULL DEFAULT uuid_generate_v4(),
+ game_id uuid REFERENCES games,
  sender integer not null,
  receiver integer not null,
- card integer not null,
+ card text not null,
  showed integer not null default 0
 );
 
 drop table if exists checks ;
 create table checks (
- id integer primary key autoincrement,
- game_id integer not null,
+ id uuid primary key NOT NULL DEFAULT uuid_generate_v4(),
+ game_id uuid REFERENCES games,
  sender integer not null,
  receiver integer not null,
  cards text not null,
