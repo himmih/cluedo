@@ -63,15 +63,11 @@
 		    if (Object.keys(json).length) {
 			if (json.good !== undefined){ //if check!
 				if (json.good == 1)
-					$('.modal-title').text("Верное обвинение от " + json.sender_name);
+					bootbox.dialog({message: json.cards_name.join(", "), title: "Верное обвинение от " + json.sender_name});
 				else
-					$('.modal-title').text("Не верное обвинение от " + json.sender_name);
-				$('.modal-body').text(json.cards_name.join(", "));
-				$('#myModal').modal({});
+					bootbox.dialog({message: json.cards_name.join(", "), title: "Нeверное обвинение от " + json.sender_name});
 		        }else{ //if show
-				$('.modal-title').text("От " + json.sender_name);
-				$('.modal-body').text(json.card_name);
-				$('#myModal').modal({});
+				bootbox.dialog({message: json.card_name, title: "От " + json.sender_name});
 			}
 		    }
 		    setTimeout(getshows, 4000);
@@ -82,23 +78,7 @@
 </script>
   </head>
   <body style="font-size:14px">
-<!-- Modal -->
-<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabel"></h4>
-      </div>
-      <div class="modal-body"> </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Modal end -->
-<div class="container center_div">
+  <div class="container center_div">
    <form class="form-main form-small" action="/show" method="POST">
 	<div class="borded">
 	 {% if game['opencards']|length > 0 %}
