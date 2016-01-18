@@ -17,6 +17,7 @@
 <![endif]-->
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='bootbox.min.js') }}"></script>
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script type=text/javascript>
@@ -34,11 +35,17 @@
 		    });
 		    if (all) setTimeout(getconnected, 3000);
 		    else{
-			  $('.form-main').submit(function() { 
-			  	var c = confirm("Отправить " 
-			  		+ $('input[name=card]:checked', '.form-main').parent().text() +" для " 
-			  		+ $('.playercolor.active').next().text()+ "  ?"); 
-			  	return c; 
+			  $(function() {
+			   $(".btn-primary").click(function(){
+				if ($('input[name=card]:checked', '.form-main').parent().text() == "")
+					bootbox.alert("Выберите одну из ваших карт!");
+				else if ($('.playercolor.active').next().text() == "")
+					bootbox.alert("Выберите Игрока, которому хотите показать карту!");
+				else 
+					bootbox.confirm("Отправить " + $('input[name=card]:checked', '.form-main').parent().text() +" для " + $('.playercolor.active').next().text()+ "  ?", function(result) {
+					    if (result) $('.form-main').submit();
+					});
+			   });
 			  });
 			  $('.playercolor').click(
 			      function(e) {
@@ -121,8 +128,8 @@
 		    </div>
 		</div>
 	<div class="row">
-		<button class="btn btn-lg btn-primary btn-block" type="submit">Показать</button>
-		<button class="btn btn-lg btn-danger btn-block" type="submit">Обвинить</button>
+		<button class="btn btn-lg btn-primary btn-block" type="button">Показать</button>
+		<button class="btn btn-lg btn-danger btn-block" type="button">Обвинить</button>
 	</div>
    </form>
 </div>
