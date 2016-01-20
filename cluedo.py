@@ -9,7 +9,7 @@ psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
 # configuration
 #DATABASE = 'database.db'
-DATABASE = 'dbname=cluedo user=mih password=himmih1234'
+DATABASE = 'dbname=cluedo user=cluedo password=12345'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -377,4 +377,4 @@ def check():
 
 if __name__ == "__main__":
     app.debug = True
-    app.run() #host='176.58.109.138', port=4242)
+    app.run(host='0.0.0.0') #host='176.58.109.138', port=4242)
