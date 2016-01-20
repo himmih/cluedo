@@ -40,21 +40,21 @@ def close_connection(exception):
 		db.close()
 
 def query_db(query, args=(), one=False):
-	cur = get_db().cursor()
-        try:
+	with get_db().cursor() as cur:
             cur.execute(query, args)
             rv = cur.fetchall()
-        finally:
-	    cur.close()
-	return (rv[0] if rv else None) if one else rv
+	    return (rv[0] if rv else None) if one else rv
 
-def execute_db(query, args=(), no_commit=False):
-	cur = get_db().cursor()
-        try:
+def execute_db(query, args=()):
+	with get_db().cursor() as cur:
             cur.execute(query, args)
-            if not no_commit: get_db().commit()
-        finally:
-            cur.close()
+	    get_db().commit()
+
+def insert_return_id(query, args=()):
+	with get_db().cursor() as cur:
+	    cur.execute(query + ' RETURNING id', args)
+	    get_db().commit()
+	    return cur.fetchone()[0]
 
 #################### DB WORK END ########################################
 
@@ -105,9 +105,9 @@ def get_game_db(id=None): #TODO remove invoke without id
             return query_db("select id, players, opencards, hides from games where new = 1")
 
 def create_game(players, my_color, my_name, game_mem):
-    execute_db('insert into games(players, opencards, hides) values (%s, %s, %s)',\
+    game_id = insert_return_id('insert into games(players, opencards, hides) values (%s, %s, %s)',\
     [players, join_cards(game_mem[1]),join_cards(game_mem[0])])
-    game_db = get_game_db()
+    game_db = get_game_db(game_id)
     for i in range(players):
     	execute_db('insert into players(game_id, color, name, playercards, connected) values (%s, %s, %s, %s, %s)',\
     	[game_db[0][0], my_color, my_name, join_cards(game_mem[2+i]), 1 if (i == 0) else 0])
@@ -250,14 +250,9 @@ def byteify(input):
 
 @app.route("/newgame")
 def init_db():
-	with closing(connect_db()) as db:
-		with app.open_resource('schema.sql', mode='r') as f:
-			cur = db.cursor()
-                        try:
-                            cur.execute(f.read())
-                            db.commit()
-                        finally:
-                            cur.close()
+	with app.open_resource('schema.sql', mode='r') as f:
+		with get_db().cursor() as cur:
+		    cur.execute(f.read())
         return 'ok'
 
 @app.route("/", methods=['GET','POST'])
