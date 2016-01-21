@@ -13,7 +13,9 @@ This is the flask (http://flask.pocoo.org) project.
 create pg user 'cluedo' with password 12345 (you can change it in cledo.py) and database
 
 psql -c "CREATE ROLE cluedo LOGIN PASSWORD '12345';"
+
 psql -c "CREATE DATABASE cluedo WITH OWNER = cluedo ENCODING = 'UTF8';"
+
 psql -d cluedo -c 'create extension "uuid-ossp";'
 
 <b>running app in dev mode: </b>

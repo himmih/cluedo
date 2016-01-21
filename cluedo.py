@@ -253,6 +253,7 @@ def init_db():
 	with app.open_resource('schema.sql', mode='r') as f:
 		with get_db().cursor() as cur:
 		    cur.execute(f.read())
+	get_db().commit()
         return 'ok'
 
 @app.route("/", methods=['GET','POST'])
@@ -357,7 +358,6 @@ def check():
 	game_db = get_game_db() #TODO check against session.get('game', None)
 	if request.method == 'POST' : #main
             hides = query_db("select hides from games where id = %s", [game_db[0][0]])
-            print str(hides)
             cards = map(lambda x: x.encode('utf-8'), [request.form['card_a'], request.form['card_b'], request.form['card_c']])
             good = 1 if split_cards(hides[0][0]) == cards else 0
             players = query_db("select color from players where game_id = %s", [game_db[0][0]])
@@ -371,5 +371,5 @@ def check():
 
 
 if __name__ == "__main__":
-    app.debug = True
+    #app.debug = True
     app.run(host='0.0.0.0') #host='176.58.109.138', port=4242)
