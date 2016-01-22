@@ -1,5 +1,5 @@
 # playing cluedo game with friends that fare from you!
-cluedo webapp for playing with your frends using mobil phones and any conference app(skype, hangouts etc.).
+cluedo webapp for playing with your friends using mobile phones and any conference app(skype, hangouts etc.).
 You need board(see scans), persons, two dices and no cards.
 
 This is the flask (http://flask.pocoo.org) project.
