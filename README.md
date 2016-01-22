@@ -1,6 +1,9 @@
 # playing cluedo game with friends that fare from you!
 cluedo webapp for playing with your friends using mobile phones and any conference app(skype, hangouts etc.).
-You need board(see scans), persons, two dices and no cards.
+You need print and join with adhesive two board pices(see docs), print one cluedo notebook(see docs), two dices and no cards.
+
+Для игры нужно распечатать табличку - notebook(см. в docs), распечатать и склеять поле - board(см. в docs), две игралные кости.
+Играют минимум 3 максимум 6 игрока.
 
 This is the flask (http://flask.pocoo.org) project.
 
