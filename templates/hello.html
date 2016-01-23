@@ -75,14 +75,14 @@
 			<input name="color" id="color" class="color" type="text" style="display: none;" required>
 		    </div>
 		</div>
-		<h4 class="colors-heading control-label">Ваш имя:</h4>
+		<h4 class="colors-heading control-label">Ваше имя:</h4>
 		<div class="row borded col-lg-4 col-lg-offset-4">
 		 <input name="name" id="name" type="text" class="form-control" required autofocus>
 		</div>
 		{% if not game['players'] %} <!-- no game -->
 		<button class="btn btn-lg btn-primary btn-block" type="submit">Создать</button>
 		{% else %}  <!-- there is a game -->
-		<button class="btn btn-lg btn-primary btn-block" type="submit">Подключится</button>
+		<button class="btn btn-lg btn-primary btn-block" type="submit">Подключиться</button>
 		{% endif %}
 	{% endif %}
  </form>
