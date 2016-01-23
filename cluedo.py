@@ -11,7 +11,7 @@ psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 #DATABASE = 'database.db'
 DATABASE = 'dbname=cluedo user=cluedo password=12345'
 DEBUG = True
-SECRET_KEY = 'development key'
+SECRET_KEY = 'jambajambasecretkey17'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
@@ -119,23 +119,33 @@ def create_game(players, my_color, my_name, game_mem):
     'opencards':opencards, 'playercards':dict(zip(game_mem[2], map(card_name, game_mem[2]))), 'color':my_color}
 
 def join_game(game_db, my_color, my_name):
+    connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
+
+    #TODO MUST CHECK NAME!!!
+    if my_name in reduce(names_from_connect, connected, []):
+        my_name = my_name + u'ц'
 
     #TODO MUST CHECK COLOR!!!
-    #TODO MUST CHECK NAME!!!
+    freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
+    if not my_color in freecolors:
+       my_color = freecolors[0] 
 
     empty_player = query_db("select id, playercards from players where connected = 0 and game_id = %s limit 1", [game_db[0][0]])
 
-    execute_db('update players set name = %s, color = %s, connected = 1 where id = %s',\
-    [my_name, my_color,empty_player[0][0]])
+    if empty_player:
+        execute_db('update players set name = %s, color = %s, connected = 1 where id = %s',\
+        [my_name, my_color,empty_player[0][0]])
 
-    connected = get_connected_players(game_db);
-    playercards_ind = split_cards(empty_player[0][1])
-    playercards = dict(zip(playercards_ind, map(card_name, playercards_ind)))
-    opencards_ind = split_cards(game_db[0][2])
-    opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
+        connected = get_connected_players(game_db);
+        playercards_ind = split_cards(empty_player[0][1])
+        playercards = dict(zip(playercards_ind, map(card_name, playercards_ind)))
+        opencards_ind = split_cards(game_db[0][2])
+        opencards = dict(zip(opencards_ind, map(card_name, opencards_ind)))
 
-    return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
-    'playercards': playercards, 'color':my_color}
+        return {'players':game_db[0][1], 'connected': connected, 'opencards':opencards,\
+        'playercards': playercards, 'color':my_color}
+    else:
+        return None
 
 def get_main(game_id, user_color):
 
@@ -237,6 +247,12 @@ def colors_from_connect(res, x):
              return res+[x['color']]
      except KeyError:
              return res
+
+def names_from_connect(res, x):
+     try:
+             return res+[x['name']]
+     except KeyError:
+             return res
 def byteify(input):
     if isinstance(input, dict):
         return {byteify(key):byteify(value) for key,value in input.iteritems()}
@@ -253,24 +269,29 @@ def init_db():
 	with app.open_resource('schema.sql', mode='r') as f:
 		with get_db().cursor() as cur:
 		    cur.execute(f.read())
+	get_db().commit()
         return 'ok'
 
 @app.route("/", methods=['GET','POST'])
 def hello():
 	if request.method == 'POST' : #main
                 game_db = get_game_db()
+                session.permanent = True
                 if not game_db: # no game, create game
                     game_mem = generate_game(int(request.form['players'])) 	
                     out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game_mem)
                     #TODO make session for hours! not for open page!
-                    session ['color'] = out['color'] #fix player id
+                    session ['color'] = out['color']
                     session ['game'] = out['game_id']
                     return render_template('main.html', game=out)
                 else: # game exists, connect to it
                     out = join_game(game_db, int(request.form['color' ]), request.form['name'])
-                    session ['color'] = int(request.form['color' ]) #fix player id
-                    session ['game'] = game_db[0][0] 
-                    return render_template('main.html', game=out)
+                    if out:
+                        session ['color'] = int(out['color'])
+                        session ['game'] = game_db[0][0] 
+                        return render_template('main.html', game=out)
+                    else:
+                        return redirect('/', code=302)
 	else: # hello
 		game_db = get_game_db()
                 if not game_db or game_db[0][0] != session.get('game', None) or session.get('color', None) == None:
@@ -278,7 +299,6 @@ def hello():
                             out = {'players':game_db[0][1]}
                             opencards_ind = split_cards(game_db[0][2])
                             out.update({"opencards" : dict(zip(opencards_ind, map(card_name, opencards_ind)))})	
-                            freecolors = range(6)
                             connected = filter(lambda x: x['color'] > -1, get_connected_players(game_db))
                             freecolors = list( set(range(6)) - set(reduce(colors_from_connect, connected, [])) )
                             out.update({"connected" : connected})	
@@ -288,7 +308,7 @@ def hello():
                             out = {"freecolors": dict(zip(range(6), map(colors, range(6))))}
                     return render_template('hello.html', game=out)
                 else:
-                    out = get_main(session['game'], session['color']) 
+                    out = get_main(session.get('game', None), session.get('color', None)) 
                     return render_template('main.html', game=out)
 
 @app.route("/getconnected")
@@ -357,7 +377,6 @@ def check():
 	game_db = get_game_db() #TODO check against session.get('game', None)
 	if request.method == 'POST' : #main
             hides = query_db("select hides from games where id = %s", [game_db[0][0]])
-            print str(hides)
             cards = map(lambda x: x.encode('utf-8'), [request.form['card_a'], request.form['card_b'], request.form['card_c']])
             good = 1 if split_cards(hides[0][0]) == cards else 0
             players = query_db("select color from players where game_id = %s", [game_db[0][0]])
@@ -371,5 +390,6 @@ def check():
 
 
 if __name__ == "__main__":
-    app.debug = True
+    #app.debug = True
+    #app.secret_key = 'jambajambasecretkey17'
     app.run(host='0.0.0.0') #host='176.58.109.138', port=4242)
