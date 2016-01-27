@@ -65,7 +65,18 @@
 					bootbox.alert("Выберите Игрока, которому хотите показать карту!");
 				else 
 					bootbox.confirm("Отправить <b>" + $('input[name=card]:checked', '.form-main').parent().text() +"</b> для <b>" + $('.playercolor.active').next().text()+ "</b>  ?", function(result) {
-					    if (result) $('.form-main').submit();
+					    if (result) {
+					         $.ajax({
+						   type: "POST",
+						   url: "/show",
+						   data: $(".form-main").serialize(),
+						   success: function(data){
+						       $('.radio').find("input[type=radio]").removeAttr('checked');
+				      		       $('.playercolor').removeClass('active');
+						   }
+						 });
+						 //e.preventDefault();
+					    }
 					});
 			   });
 			  });
