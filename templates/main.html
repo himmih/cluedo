@@ -38,12 +38,14 @@
 <script type='text/javascript' src="{{ url_for('static', filename='jquery-1.9.1.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
 <script type='text/javascript' src="{{ url_for('static', filename='bootbox.min.js') }}"></script>
+<script type='text/javascript' src="{{ url_for('static', filename='NoSleep.min.js') }}"></script>
 <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
 <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 <script type="text/javascript">
+	 var noSleep = new NoSleep();
          function getconnected(){
 	        $(".btn-danger").click(function() { window.location.replace($SCRIPT_ROOT + '/check'); });
 		$.getJSON($SCRIPT_ROOT + '/getconnected').done(function(json){
@@ -94,12 +96,28 @@
 		    return false;
 		});
           }
-          $(document).ready(getconnected);
+
+	  function initNoSleep(){
+	    $('.eye').click(function() {
+	      if ($('.eye').hasClass('closed')) {
+		noSleep.enable();
+		$('.eye').removeClass('closed');
+		$('.eye').addClass('opened');
+	      } else {
+		noSleep.disable();
+		$('.eye').removeClass('opened');
+		$('.eye').addClass('closed');
+	      }
+	    });
+	  }
+
+          $(document).ready(function(){getconnected(); initNoSleep()});
 </script>
   </head>
   <body style="font-size:14px">
   <div class="container center_div">
    <form class="form-main form-small" action="/show" method="POST">
+        <row><div class="eye closed img-responsive pull-right"></div> </row>
 	<div class="borded">
 	 {% if game['opencards']|length > 0 %}
 	 	<h4 class="opencards-heading control-label">Открытые карты:</h4>

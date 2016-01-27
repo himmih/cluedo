@@ -4,25 +4,26 @@ import random, collections, json, psycopg2, psycopg2.extensions
 from contextlib import closing
 from flask import Flask, request, session, g, redirect, url_for, \
 abort, render_template, flash, Response, make_response, jsonify
+from flask_socketio import SocketIO
+
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
 # configuration
-#DATABASE = 'database.db'
 DATABASE = 'dbname=cluedo user=cluedo password=12345'
 DEBUG = True
 SECRET_KEY = 'jambajambasecretkey17'
 USERNAME = 'admin'
 PASSWORD = 'default'
 
-# create our little application :)
 app = Flask(__name__)
+app.config['SECRET_KEY'] = SECRET_KEY
 app.config.from_object(__name__)
+socketio = SocketIO(app)
 
 #################### DB WORK ########################################
 
 def connect_db():
-	#return sqlite3.connect(app.config['DATABASE'])
         return psycopg2.connect(app.config['DATABASE'])
 
 
@@ -204,12 +205,6 @@ def generate_game(n = 3):
     return out
 def colors(x):
     return {
-         #0: '#008000',
-         #1: '#ffdb58',
-         #2: '#000080',
-         #3: '#800080',
-         #4: '#ff2400',
-         #5: '#ffffff'
          0: '#53aa53',
          1: '#ffe88f',
          2: '#5353aa',
@@ -280,7 +275,6 @@ def hello():
                 if not game_db: # no game, create game
                     game_mem = generate_game(int(request.form['players'])) 	
                     out = create_game(int(request.form['players']), int(request.form['color' ]), request.form['name'], game_mem)
-                    #TODO make session for hours! not for open page!
                     session ['color'] = out['color']
                     session ['game'] = out['game_id']
                     return render_template('main.html', game=out)
@@ -327,49 +321,59 @@ def push_show():
          return redirect('/', code=302)
             
 	if request.method == 'POST' : #main
-         #TODO check inputs
-         #TODO show checks!
-         card = request.form['card']
-         receiver = int(request.form['color'])
-    	 execute_db('insert into shows(game_id, sender, receiver, card, showed) values (%s, %s, %s, %s, %s)',\
-    	 [game_db[0][0], my_color, receiver, card, 0])
-         return redirect('/', code=302)
-        else:
-            show = query_db("select id, card, sender from shows where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
-            check = query_db("select id, cards, sender, good from checks where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
-            if len(check) > 0:
-
-                sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [check[0][2], game_db[0][0]])
-
-                out = json.dumps({'cards':check[0][1], 'good': check[0][3], 'sender':check[0][2],\
-                'sender_name': sender_name[0][0], 'cards_name':map(card_name, split_cards(check[0][1]))}, encoding='utf-8', ensure_ascii=False)
-
-                if (check[0][3] == 1): 
-                    nobody_else = query_db("select id from checks where receiver != %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
-                    if len(nobody_else) < 1: execute_db('update games set new = 0 where id = %s', [game_db[0][0]])
-                execute_db('update checks set showed = %s where id = %s', [1, check[0][0]])
-
-                resp = Response(response=out,
-                            status=200, \
-                                        mimetype="application/json")
-                return(resp)
-            elif len(show) > 0:
-                execute_db('update shows set showed = %s where id = %s', [1, show[0][0]])
-
-                sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [show[0][2], game_db[0][0]])
-
-                out = json.dumps({'card':show[0][1], 'sender':show[0][2],\
-                'sender_name': sender_name[0][0], 'card_name':card_name(show[0][1])}, encoding='utf-8', ensure_ascii=False)
-
-                resp = Response(response=out,
-                            status=200, \
-                                        mimetype="application/json")
-                return(resp)
+            #TODO check inputs
+            #TODO show checks!
+            card = request.form['card']
+            receiver = int(request.form['color'])
+    	    execute_db('insert into shows(game_id, sender, receiver, card, showed) values (%s, %s, %s, %s, %s)',\
+    	    [game_db[0][0], my_color, receiver, card, 0])
+            return redirect('/', code=302)
+        else: #TODO check if no not check result the game not end!
+            out = get_show(my_color, game_db[0][0], game_db)
+            if (out):
+                showed_show(json.loads(out).get('id'))
             else:
-                resp = Response(response=json.dumps({}),
-                            status=200, \
-                                        mimetype="application/json")
-                return(resp)
+                out = get_check(my_color, game_db[0][0], game_db)
+                if (out):
+                    showed_check(json.loads(out).get('id'))
+                else:
+                    out = json.dumps({})
+            return(Response(response=out, status=200, mimetype="application/json"))
+
+def get_show(my_color, game_id, game_db = None): #TODO need to redirect to new game????
+        if not game_db: game_db = get_game_db(game_id)
+        show = query_db("select id, card, sender from shows where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
+        if len(show) > 0:
+            sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [show[0][2], game_db[0][0]])
+            out = json.dumps({ 'id': show[0][0], 'card':show[0][1], 'sender':show[0][2],\
+            'sender_name': sender_name[0][0], 'card_name':card_name(show[0][1])}, encoding='utf-8', ensure_ascii=False)
+            return out
+        else:
+            return None
+
+def showed_show(show_id): #callback=ack
+        if (show_id):
+            execute_db('update shows set showed = %s where id = %s', [1, show_id])
+
+def get_check(my_color, game_id, game_db = None):
+        if not game_db: game_db = get_game_db(game_id)
+        check = query_db("select id, cards, sender, good from checks where receiver = %s and game_id = %s and showed = 0 limit 1", [my_color, game_db[0][0]])
+        if len(check) > 0:
+            sender_name = query_db("select name from players where color = %s and game_id = %s limit 1", [check[0][2], game_db[0][0]])
+            out = json.dumps({ 'id': check[0][0], 'cards':check[0][1], 'good': check[0][3], 'sender':check[0][2],\
+            'sender_name': sender_name[0][0], 'cards_name':map(card_name, split_cards(check[0][1]))}, encoding='utf-8', ensure_ascii=False)
+            return out
+        else:
+            return None
+
+def showed_check(check_id): #callback=ack
+            if len(check_id) > 0:
+                checks = query_db("select good, receiver, game_id from checks where id = %s", [check_id]) #is_good_check, my_color, game_id
+                if len(checks) > 0:
+                    execute_db('update checks set showed = %s where id = %s', [1, check_id])
+                    if (checks[0][0] == 1): 
+                        nobody_else = query_db("select id from checks where receiver != %s and game_id = %s and showed = 0 limit 1", [checks[0][1], checks[0][2]])
+                        if len(nobody_else) < 1: execute_db('update games set new = 0 where id = %s', [checks[0][2]])
             
 @app.route("/check", methods=['GET','POST'])
 def check():
@@ -391,5 +395,4 @@ def check():
 
 if __name__ == "__main__":
     #app.debug = True
-    #app.secret_key = 'jambajambasecretkey17'
-    app.run(host='0.0.0.0') #host='176.58.109.138', port=4242)
+    socketio.run(app, host='0.0.0.0') #host='176.58.109.138', port=4242)

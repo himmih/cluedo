@@ -9,6 +9,19 @@
   border: 2px solid rgba(0, 0, 0, 0.2);
 }
 
+.eye.closed {
+ background:url('eye_close.png');
+ cursor: pointer;
+  width: 36px;
+  height: 36px;
+}
+.eye.opened {
+ background:url('eye_open.png');
+ cursor: pointer;
+  width: 36px;
+  height: 36px;
+}
+
 .b-colorpicker .item:hover {
   border: 2px solid rgba(0, 0, 0, 0.9);
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.9) inset;
