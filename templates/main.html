@@ -98,7 +98,7 @@
 				if (json.good == 1)
 					bootbox.dialog({message: "<b>" + json.cards_name.join(", ") + "</b>", title: "Верное обвинение от <b>" + json.sender_name + "</b>", buttons: {success: { label: "Ура!!! " + json.sender_name ,  className: "btn-success"}}});
 				else
-					bootbox.dialog({message: "<b>" + json.cards_name.join(", ") + "</b>" , title: "Неверное обвинение от <b>" + json.sender_name + "</b>", buttons: {success: { label: "Эх, " + json.sender_name ,  className: "btn-danger"}}});
+					bootbox.dialog({message: "К сожалению, нас покидает <b>" + json.sender_name + "</b>" , title: "Неверное обвинение от <b>" + json.sender_name + "</b>", buttons: {success: { label: "Эх, " + json.sender_name ,  className: "btn-danger"}}});
 		        }else{ //if show
 				bootbox.dialog({message: "<b>" + json.card_name + "</b>", title: json.sender_name, buttons: {success: { label: "OK",  className: "btn-default"}}});
 			}
