@@ -1,4 +1,4 @@
-# playing cluedo game with friends that fare from you!
+# playing cluedo game with friends that far from you!
 cluedo webapp for playing with your friends using mobile phones and any conference app(skype, hangouts etc.).
 You need print and join with adhesive two board pieces(see docs), print one cluedo notebook(see docs).
 Also you need 6 round pieces 1cm colored with pencil or marker - green, red, yellow, purple, white, blue
